@@ -1,2 +1,4 @@
 # Question-Answering-NLP
-# Where is Brian ?
+# Example:
+#   Where is Brian ?
+#   Brian is playing Basketball

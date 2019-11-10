@@ -10,6 +10,15 @@ nlp = spacy.load('en_core_web_lg')
 import neuralcoref
 neuralcoref.add_to_pipe(nlp)
 
+
+questions = {}
+def add_question(question, answer):
+    if question in questions:
+        questions[question].append(answer)
+    else:
+        questions[question] = [answer]
+
+
 # The text we want to examine
 text = """London is the capital and most populous city of England and  the United Kingdom.  
 Standing on the River Thames in the south east of the island of Great Britain, 
@@ -50,10 +59,11 @@ for svo in svos:
 # Print the results
 print("Here are the things I know about London:")
 
-questions = {}
 for token in doc:
     if token.pos_ == 'VERB':
         # Extract semi-structured statements
+
+        # TODO: find all verbs first - may be redundant (put in a set)
         statements = textacy.extract.semistructured_statements(doc, "London", cue=token.lemma_, ignore_entity_case=True)
         for statement in statements:
             entity, verb, fact = statement
@@ -67,6 +77,30 @@ for token in doc:
                     questions[what_is_y].append(str(fact))
                 else:
                     questions[what_is_y] = [str(fact)]
+    
+    if token.dep_ == "relcl": # relative clause
+        # close ended question: X, who/which verb -> Who verb? X
+
+        # the relative pronoun is guaranteed to be the left child
+        # right child is direct object
+        verb_phrase = doc[token.left_edge.i + 1 : token.right_edge.i + 1].text # https://spacy.io/usage/examples#subtrees
+        interrogative_pronoun = token.left_edge.text
+        if token.left_edge.text == "which":
+            interrogative_pronoun = "what"
+        elif token.left_edge.text == "that":
+            interrogative_pronoun = "which"
+            # TODO: handle test_4 and test_5
+        x_who_question = interrogative_pronoun + " " + verb_phrase + "?"
+        answer = token.head.text # the token that the relative clause refers to
+        # TODO - coreference for appositives (e.g. "Jacobo, the advisor who retired - replace advisor with Jacobo")
+
+        add_question(x_who_question, answer)
+
+        test_1 = "Colonel Sanders, who founded KFC, is my hero."
+        test_2 = "Water, which is the source of all life, is made of hydrogen."
+        test_3 = "Jacobo, the advisor who retired, used to teach 15-121."
+        test_4 = "nlp, the course that I took, uses gradescope."
+        test_5 = "Hello Kitty, the cat that cannot smile, is old."
 
 print("Questions generated")
 print(questions)

@@ -7,8 +7,10 @@ ENV LC_ALL C.UTF-8
 # Install packages 
 RUN apt-get -y update && \
     apt-get -y upgrade && \
-	apt-get -y install python3-pip python3-dev &&\
-	pip3 install spacy 
+	apt-get -y install python3-pip python3-dev && \
+	pip3 install spacy && \
+	pip3 install textacy && \
+	pip3 install neuralcoref
 
 # Add the files
 RUN mkdir /QA

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3 -W ignore::DeprecationWarning
+import sys
+import io
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: ./answer ARTICLE.txt QUESTIONS.txt")
+        sys.exit(1)
+
+    article_file = sys.argv[1]
+    question_file = sys.argv[2]
+
+    with open(question_file, 'r')  as f:
+        count = 0
+        for line in f:
+            count += 1
+
+            # TODO: call the answering module
+            answer = ""
+
+            print(answer)

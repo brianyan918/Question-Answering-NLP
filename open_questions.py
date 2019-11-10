@@ -61,7 +61,7 @@ for token in doc:
 
             if token.text == "was": # TODO: LEMMA COMPARISON
                 # open-ended question: X is Y -> What is Y? X.
-                # TODO: replace what based on type of NER
+                # TODO: replace "What" based on type of NER
                 what_is_y = "What " + token.text + " London?"
                 if what_is_y in questions:
                     questions[what_is_y].append(str(fact))

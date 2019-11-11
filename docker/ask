@@ -1,6 +1,7 @@
 #!/usr/bin/env python3 -W ignore::DeprecationWarning
 import sys
-import io
+from open_questions import QuestionGenerator
+import random
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
@@ -14,11 +15,18 @@ if __name__ == '__main__':
         article_txt = f.read()
 
     # TODO: rank the questions
+    qg = QuestionGenerator(article_txt)
+    questions = qg.questions_only() + qg.closed_questions # open & closed qs
+    #print(len(questions))
+    #closed_qs = open_qg.closed_questions
+    #print(len(closed_qs))
+    #print(closed_qs)
 
-    questions = []
-    for i in range(num_questions):
-        question = ""
-        questions.append(question)
+    if len(questions) < num_questions:
+        for i in range(num_questions - len(questions)):
+            question = ""
+            questions.append(question)
 
+    random.shuffle(questions)
     for i in range(num_questions):
         print(questions[i])

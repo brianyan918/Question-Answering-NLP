@@ -1,7 +1,6 @@
 #!/usr/bin/env python3 -W ignore::DeprecationWarning
 import sys
-import io
-from open_questions import QuestionGenerator
+from docker.open_questions import QuestionGenerator
 import random
 
 if __name__ == '__main__':

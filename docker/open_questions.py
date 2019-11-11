@@ -2,6 +2,7 @@
 
 import spacy
 import textacy.extract
+import re
 
 # Load the large English NLP model
 nlp = spacy.load('en_core_web_lg')
@@ -23,11 +24,11 @@ class QuestionGenerator(object):
 
         # Parse the document with spaCy
         doc = nlp(article)
-        print(doc._.has_coref)
-        print(doc._.coref_clusters)
+        #print(doc._.has_coref)
+        #print(doc._.coref_clusters)
         doc = nlp(doc._.coref_resolved)
-        print("Coreference Resolution:")
-        print(doc)
+        #print("Coreference Resolution:")
+        #print(doc)
 
         #https://stackoverflow.com/questions/47856247/extract-verb-phrases-using-spacy
         """print("Verbs:")
@@ -36,22 +37,22 @@ class QuestionGenerator(object):
         for verb in verbs:
             print(f" - {verb.text}")"""
 
-        print("Named Entities")
-        for entity in doc.ents:
-            print(f" - {entity.text} ({entity.label_})")
+        #print("Named Entities")
+        #for entity in doc.ents:
+        #    print(f" - {entity.text} ({entity.label_})")
 
         # Extract semi-structured statements
         svos = textacy.extract.subject_verb_object_triples(doc)
 
         # Print the results
-        print("Subject, verb, object tuples:")
+        #print("Subject, verb, object tuples:")
 
-        for svo in svos:
-            subject, verb, obj = svo
-            print(f" - {svo}")
+        #for svo in svos:
+        #    subject, verb, obj = svo
+        #    print(f" - {svo}")
         
         # Print the results
-        print("Here are the things I know about London:")
+        #print("Here are the things I know about London:")
 
         for token in doc:
             if token.pos_ == 'VERB':
@@ -61,7 +62,7 @@ class QuestionGenerator(object):
                 statements = textacy.extract.semistructured_statements(doc, "London", cue=token.lemma_, ignore_entity_case=True)
                 for statement in statements:
                     entity, verb, fact = statement
-                    print(f" - " + token.text + " " + str(fact))
+                    #print(f" - " + token.text + " " + str(fact))
 
                     if token.text == "was": # TODO: LEMMA COMPARISON
                         # open-ended question: X is Y -> What is Y? X.
@@ -92,6 +93,34 @@ class QuestionGenerator(object):
                 test_3 = "Jacobo, the advisor who retired, used to teach 15-121."
                 test_4 = "nlp, the course that I took, uses gradescope."
                 test_5 = "Hello Kitty, the cat that cannot smile, is old."
+
+        # Closed Questions
+        self.treated_verbs = []
+        questions = []
+        for token_verb in doc:
+            if token_verb.dep_ == 'ROOT':
+                for token_subj in token_verb.lefts:
+                    if token_subj.dep_ == 'nsubj':
+                        if token_verb.lemma_ not in self.treated_verbs:
+                            questions += self.generate_closed_question(doc, token_subj.text, token_verb)
+        self.closed_questions = questions
+
+    def generate_closed_question(self, doc, subject, verb_token):
+        questions = []
+        statements = textacy.extract.semistructured_statements(doc, subject, cue=verb_token.lemma_,
+                                                               ignore_entity_case=True)
+        self.treated_verbs.append(verb_token.lemma_)
+        for statement in statements:
+            entity, verb, fact = statement
+            if (' ' in verb.text):
+                verb = verb.text.split()
+                question = verb[0] + ' ' + entity.text + ' ' + verb[1] + ' ' + fact.text.strip()[:-1] + '?'
+            else:
+                question = verb.text + ' ' + entity.text + ' ' + fact.text.strip()[:-1] + '?'
+            # Capitalize first letter of string
+            question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
+            questions.append(question)
+        return (questions)
 
     def add_question(self, question, answer):
         if question in self.questions:

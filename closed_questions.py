@@ -35,7 +35,7 @@ London has been a major settlement for two millennia. It was founded by the Roma
 who named it Londinium.
 """
 
-# Parse the document with spaCy
+# Parse the document with SpaCy
 def main(text):
     doc = nlp(text)
 

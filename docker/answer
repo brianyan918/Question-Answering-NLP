@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 -W ignore::DeprecationWarning
 import sys
 import io
-
+from answer_generator import AnswerGenerator 
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -11,12 +11,15 @@ if __name__ == "__main__":
     article_file = sys.argv[1]
     question_file = sys.argv[2]
 
+    with open(article_file, 'r', encoding='utf8') as f:
+        article_file = f.read()
+
     with open(question_file, 'r')  as f:
         count = 0
         for line in f:
             count += 1
-
+            generator = AnswerGenerator(article_file)
             # TODO: call the answering module
-            answer = ""
+            answer = generator.answer_generator(line)
 
             print(answer)

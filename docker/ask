@@ -22,11 +22,11 @@ if __name__ == '__main__':
     #print(len(closed_qs))
     #print(closed_qs)
 
-    if len(questions) < num_questions:
-        for i in range(num_questions - len(questions)):
-            question = ""
-            questions.append(question)
+    # if len(questions) < num_questions:
+    #     for i in range(num_questions - len(questions)):
+    #         question = ""
+    #         questions.append(question)
 
     random.shuffle(questions)
-    for i in range(num_questions):
+    for i in range(len(questions)):
         print(questions[i])

@@ -5,6 +5,7 @@ import numpy as np
 
 # Load the large English NLP model
 nlp = spacy.load('en_core_web_lg')
+nlp.add_pipe(nlp.create_pipe('sentencizer'))
 
 # Add neural coref to SpaCy's pipe
 import neuralcoref
@@ -30,7 +31,6 @@ class AnswerGenerator():
                 question_set.add(word)
 
         #transform text to list of sentences
-        nlp.add_pipe(nlp.create_pipe('sentencizer'))
         doc = nlp(self.text)
         sentences = [sent.string.strip() for sent in doc.sents]
         sentence_difference = []

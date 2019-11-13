@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ## X verbs Y -> What does X verb? Y
 
 import spacy
@@ -15,12 +16,6 @@ neuralcoref.add_to_pipe(nlp)
 class QuestionGenerator(object):
     def __init__(self, article):
         self.questions = {}
-        # The text we want to examine
-        article = """London is the capital and most populous city of England and  the United Kingdom.  
-        Standing on the River Thames in the south east of the island of Great Britain, 
-        London has been a major settlement for two millennia.  It was founded by the Romans, 
-        who named it Londinium.
-        """
 
         # Parse the document with spaCy
         doc = nlp(article)

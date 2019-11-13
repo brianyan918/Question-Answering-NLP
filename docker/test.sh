@@ -7,5 +7,3 @@ echo '****************'
 sudo docker exec -it $NAME ./answer /host/Users/data/set1/a1.txt /host/Users/test_questions.txt
 echo '****************'
 sudo docker stop $NAME >/dev/null
-
-

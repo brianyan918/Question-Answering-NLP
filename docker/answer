@@ -1,7 +1,7 @@
-#!/usr/bin/env python3 -W ignore::DeprecationWarning
+#!/usr/bin/env python3
 import sys
 import io
-from answer_generator import AnswerGenerator 
+from answer_generator import AnswerGenerator
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

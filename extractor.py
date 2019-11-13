@@ -1,7 +1,15 @@
 import spacy
 import textacy.extract
+<<<<<<< HEAD
 import question_generator as qg
 
+=======
+import sys
+
+article_txt = sys.argv[1]
+with open(article_txt, 'r', encoding='utf8') as f:
+    article_txt = f.read()
+>>>>>>> 6b5ec5dc945d4b3a587d5121340b14a67915b65f
 
 # Load the large English NLP model
 nlp = spacy.load('en_core_web_lg')
@@ -10,21 +18,16 @@ nlp = spacy.load('en_core_web_lg')
 import neuralcoref
 neuralcoref.add_to_pipe(nlp)
 
-# The text we want to examine
-text = """London is the capital and most populous city of England and  the United Kingdom.  
-Standing on the River Thames in the south east of the island of Great Britain, 
-London has been a major settlement for two millennia.  It was founded by the Romans, 
-who named it Londinium.
-"""
-
 # Parse the document with spaCy
-doc = nlp(text)
+doc = nlp(article_txt)
 print(doc._.has_coref)
 print(doc._.coref_clusters)
 doc = nlp(doc._.coref_resolved)
 print("Coreference Resolution:")
 print(doc)
 
+#for token in doc:
+#    print(token, token.tag_, token.pos_)
 
 #https://stackoverflow.com/questions/47856247/extract-verb-phrases-using-spacy
 """print("Verbs:")
@@ -55,5 +58,9 @@ for token in doc:
         statements = textacy.extract.semistructured_statements(doc, "London", cue=token.lemma_, ignore_entity_case=True)
         for statement in statements:
             entity, verb, fact = statement
+<<<<<<< HEAD
             print(f" - " + token.text + " " + str(fact))
         qg.generate_closed_question(doc, "London", token)
+=======
+            print(f" - " + str(fact))
+>>>>>>> 6b5ec5dc945d4b3a587d5121340b14a67915b65f

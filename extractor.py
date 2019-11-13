@@ -1,5 +1,7 @@
 import spacy
 import textacy.extract
+import question_generator as qg
+
 
 # Load the large English NLP model
 nlp = spacy.load('en_core_web_lg')
@@ -54,3 +56,4 @@ for token in doc:
         for statement in statements:
             entity, verb, fact = statement
             print(f" - " + token.text + " " + str(fact))
+        qg.generate_closed_question(doc, "London", token)

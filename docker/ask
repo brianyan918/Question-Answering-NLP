@@ -8,25 +8,18 @@ if __name__ == '__main__':
         print("Usage: ./ask ARTICLE.txt NUM_QUESTIONS")
         sys.exit(1)
 
-    article_txt = sys.argv[1]
+    article_file = sys.argv[1]
     num_questions = int(sys.argv[2])
 
-    with open(article_txt, 'r', encoding='utf8') as f:
+    with open(article_file, 'r') as f:
         article_txt = f.read()
 
     # TODO: rank the questions
     qg = QuestionGenerator(article_txt)
     questions = qg.questions_only() + qg.closed_questions # open & closed qs
-    #print(len(questions))
-    #closed_qs = open_qg.closed_questions
-    #print(len(closed_qs))
-    #print(closed_qs)
 
-    # if len(questions) < num_questions:
-    #     for i in range(num_questions - len(questions)):
-    #         question = ""
-    #         questions.append(question)
 
-    random.shuffle(questions)
-    for i in range(len(questions)):
+    #print(num_questions, questions)
+    #random.shuffle(questions)
+    for i in range(num_questions):
         print(questions[i])

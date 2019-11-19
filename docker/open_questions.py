@@ -6,11 +6,11 @@ import textacy.extract
 import re
 
 # Load the large English NLP model
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_core_web_sm')
 
 # Add neural coref to SpaCy's pipe
-import neuralcoref
-neuralcoref.add_to_pipe(nlp)
+#import neuralcoref
+#neuralcoref.add_to_pipe(nlp)
 
 
 class QuestionGenerator(object):
@@ -19,35 +19,10 @@ class QuestionGenerator(object):
 
         # Parse the document with spaCy
         doc = nlp(article)
-        #print(doc._.has_coref)
-        #print(doc._.coref_clusters)
-        doc = nlp(doc._.coref_resolved)
-        #print("Coreference Resolution:")
-        #print(doc)
-
-        #https://stackoverflow.com/questions/47856247/extract-verb-phrases-using-spacy
-        """print("Verbs:")
-        verb_clause_pattern = r'<VERB>*<ADV>*<PART>*<VERB>+<PART>*'
-        verbs = list(textacy.extract.pos_regex_matches(doc, verb_clause_pattern))
-        for verb in verbs:
-            print(f" - {verb.text}")"""
-
-        #print("Named Entities")
-        #for entity in doc.ents:
-        #    print(f" - {entity.text} ({entity.label_})")
+        #doc = nlp(doc._.coref_resolved)
 
         # Extract semi-structured statements
         svos = textacy.extract.subject_verb_object_triples(doc)
-
-        # Print the results
-        #print("Subject, verb, object tuples:")
-
-        #for svo in svos:
-        #    subject, verb, obj = svo
-        #    print(f" - {svo}")
-        
-        # Print the results
-        #print("Here are the things I know about London:")
 
         for token in doc:
             if token.pos_ == 'VERB':

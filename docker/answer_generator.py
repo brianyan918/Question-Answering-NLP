@@ -5,12 +5,12 @@ import re
 import numpy as np
 
 # Load the large English NLP model
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_core_web_sm')
 nlp.add_pipe(nlp.create_pipe('sentencizer'))
 
 # Add neural coref to SpaCy's pipe
-import neuralcoref
-neuralcoref.add_to_pipe(nlp)
+#import neuralcoref
+#neuralcoref.add_to_pipe(nlp)
 
 class AnswerGenerator():
     def __init__(self, text):

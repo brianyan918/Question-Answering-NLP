@@ -24,35 +24,47 @@ class QuestionGenerator(object):
         # Extract semi-structured statements
         svos = textacy.extract.subject_verb_object_triples(doc)
 
+        # open questions
         for token in doc:
-            if token.pos_ == 'VERB':
-                # Extract semi-structured statements
+            print(token.text, token.dep_)
+            # if token.pos_ == 'VERB':
+            #     # Extract semi-structured statements
 
-                # TODO: find all verbs first - may be redundant (put in a set)
-                statements = textacy.extract.semistructured_statements(doc, "London", cue=token.lemma_, ignore_entity_case=True)
-                for statement in statements:
-                    entity, verb, fact = statement
-                    #print(f" - " + token.text + " " + str(fact))
+            #     # TODO: find all verbs first - may be redundant (put in a set)
+            #     statements = textacy.extract.semistructured_statements(doc, "London", cue=token.lemma_, ignore_entity_case=True)
+            #     for statement in statements:
+            #         entity, verb, fact = statement
+            #         #print(f" - " + token.text + " " + str(fact))
 
-                    if token.text == "was": # TODO: LEMMA COMPARISON
-                        # open-ended question: X is Y -> What is Y? X.
-                        # TODO: replace "What" based on type of NER
-                        what_is_y = "What " + token.text + " London?"
-                        self.add_question(what_is_y, str(fact))
+            #         if token.text == "was": # TODO: LEMMA COMPARISON
+            #             # open-ended question: X is Y -> What is Y? X.
+            #             # TODO: replace "What" based on type of NER
+            #             what_is_y = "What " + token.text + " London?"
+            #             self.add_question(what_is_y, str(fact))
         
             if token.dep_ == "relcl": # relative clause
                 # close ended question: X, who/which verb -> Who verb? X
+
+                if token.left_edge.dep_ == "aux": # exclude infinitve clauses
+                    continue
 
                 # the relative pronoun is guaranteed to be the left child
                 # right child is direct object
                 verb_phrase = doc[token.left_edge.i + 1 : token.right_edge.i + 1].text # https://spacy.io/usage/examples#subtrees
                 interrogative_pronoun = token.left_edge.text
                 if token.left_edge.text == "which":
-                    interrogative_pronoun = "what"
+                    interrogative_pronoun = "What"
                 elif token.left_edge.text == "that":
-                    interrogative_pronoun = "which"
+                    interrogative_pronoun = "What"
                     # TODO: handle test_4 and test_5
-                x_who_question = interrogative_pronoun + " " + verb_phrase + "?"
+                elif token.left_edge.text == "when":
+                    interrogative_pronoun = "When did" # TODO: tense agreement with rest of verb
+                elif token.left_edge.text == "where":
+                    interrogative_pronoun = "Where does" # TODO: verb subject agreement (plurality) / where was
+                elif token.left_edge.dep_ == "nsubj": # clause is already a sentence
+                    interrogative_pronoun = "What"
+                    verb_phrase = doc[token.i : token.right_edge.i + 1].text # replace the full subject of clause
+                x_who_question = interrogative_pronoun.capitalize() + " " + verb_phrase + "?"
                 answer = token.head.text # the token that the relative clause refers to
                 # TODO - coreference for appositives (e.g. "Jacobo, the advisor who retired - replace advisor with Jacobo")
 
@@ -84,9 +96,9 @@ class QuestionGenerator(object):
             entity, verb, fact = statement
             if (' ' in verb.text):
                 verb = verb.text.split()
-                question = verb[0] + ' ' + entity.text + ' ' + verb[1] + ' ' + fact.text.strip()[:-1] + '?'
+                question = verb[0] + ' ' + entity.text + ' ' + verb[1] + ' ' + fact.text.strip() + '?'
             else:
-                question = verb.text + ' ' + entity.text + ' ' + fact.text.strip()[:-1] + '?'
+                question = verb.text + ' ' + entity.text + ' ' + fact.text.strip() + '?'
             # Capitalize first letter of string
             question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
             questions.append(question)

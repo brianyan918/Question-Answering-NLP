@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-## X verbs Y -> What does X verb? Y
 
 import spacy
 import textacy.extract
@@ -15,7 +14,7 @@ nlp = spacy.load('en_core_web_sm')
 
 class QuestionGenerator(object):
     def __init__(self, article):
-        self.questions = {}
+        self.questions = []
 
         # Parse the document with spaCy
         doc = nlp(article)
@@ -24,9 +23,8 @@ class QuestionGenerator(object):
         # Extract semi-structured statements
         svos = textacy.extract.subject_verb_object_triples(doc)
 
-        # open questions
+        # open questions generated from relative clauses
         for token in doc:
-            print(token.text, token.dep_)
             # if token.pos_ == 'VERB':
             #     # Extract semi-structured statements
 
@@ -65,10 +63,10 @@ class QuestionGenerator(object):
                     interrogative_pronoun = "What"
                     verb_phrase = doc[token.i : token.right_edge.i + 1].text # replace the full subject of clause
                 x_who_question = interrogative_pronoun.capitalize() + " " + verb_phrase + "?"
-                answer = token.head.text # the token that the relative clause refers to
+                # answer = token.head.text # the token that the relative clause refers to
                 # TODO - coreference for appositives (e.g. "Jacobo, the advisor who retired - replace advisor with Jacobo")
 
-                self.add_question(x_who_question, answer)
+                self.questions.append(x_who_question)
 
                 test_1 = "Colonel Sanders, who founded KFC, is my hero."
                 test_2 = "Water, which is the source of all life, is made of hydrogen."
@@ -76,39 +74,57 @@ class QuestionGenerator(object):
                 test_4 = "nlp, the course that I took, uses gradescope."
                 test_5 = "Hello Kitty, the cat that cannot smile, is old."
 
-        # Closed Questions
+        # SVOs to generate closed questions and open ended X verbs Y -> What does X verb?
         self.treated_verbs = []
-        questions = []
+        self.closed_questions = []
         for token_verb in doc:
             if token_verb.dep_ == 'ROOT':
                 for token_subj in token_verb.lefts:
                     if token_subj.dep_ == 'nsubj':
                         if token_verb.lemma_ not in self.treated_verbs:
-                            questions += self.generate_closed_question(doc, token_subj.text, token_verb)
-        self.closed_questions = questions
-
-    def generate_closed_question(self, doc, subject, verb_token):
-        questions = []
-        statements = textacy.extract.semistructured_statements(doc, subject, cue=verb_token.lemma_,
+                            self.treated_verbs.append(token_verb.lemma_)
+                            statements = textacy.extract.semistructured_statements(doc, token_subj.text, cue=token_verb.lemma_,
                                                                ignore_entity_case=True)
-        self.treated_verbs.append(verb_token.lemma_)
-        for statement in statements:
-            entity, verb, fact = statement
-            if (' ' in verb.text):
-                verb = verb.text.split()
-                question = verb[0] + ' ' + entity.text + ' ' + verb[1] + ' ' + fact.text.strip() + '?'
-            else:
-                question = verb.text + ' ' + entity.text + ' ' + fact.text.strip() + '?'
-            # Capitalize first letter of string
-            question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
-            questions.append(question)
-        return (questions)
+                            
+                            for statement in statements:
+                                entity, verb, fact = statement
+                                
+                                self.questions.append(self.generate_open_question(entity, verb, fact, token_verb.lemma_))
+                                print(fact.text.strip())
+                                    
+                                self.closed_questions.append(self.generate_closed_question(entity, verb, fact, token_verb.lemma_))
 
-    def add_question(self, question, answer):
-        if question in self.questions:
-            self.questions[question].append(answer)
-        else:
-            self.questions[question] = [answer]
+    
+    def generate_open_question(self, entity, verb, fact, lemma):
+        if (' ' in verb.text):
+            verb = verb.text.split()
+            question = "What " + verb[0] + ' ' + entity.text + ' ' + verb[1] + '?'
+        elif lemma == "be":
+            # TODO: tense / agreement
+            question = "What is " + fact.text.strip() + '?'
+            # TODO: if entity is a named entity (who) / time (when) / location (where) - what/why/who/when
+        else: # X verbs Y
+            question = "What does " + entity.text + ' ' + verb.text + '?'
 
-    def questions_only(self):
-        return list(self.questions.keys())
+        # Capitalize first letter of string
+        print(question)
+        return question.capitalize()
+
+    def generate_closed_question(self, entity, verb, fact, lemma):
+        if (' ' in verb.text): # auxiliary verbs
+            verb = verb.text.split()
+            question = verb[0] + ' ' + entity.text + ' ' + verb[1] + ' ' + fact.text.strip() + '?'
+        elif lemma == "be":
+            question = verb.text + ' ' + entity.text + ' ' + fact.text.strip() + '?'
+        else: # X verbs Y
+            # TODO - tense matching, verb agreement
+            question = "Does " + entity.text + ' ' + verb.text + ' ' + fact.text.strip() + '?'
+
+        # Capitalize first letter of string
+        question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
+        return question
+
+    def get_questions(self):
+        questions = self.questions + self.closed_questions
+        # postprocess the questions
+        return questions

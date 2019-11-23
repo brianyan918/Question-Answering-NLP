@@ -8,17 +8,23 @@ import re
 nlp = spacy.load('en_core_web_sm')
 
 # Add neural coref to SpaCy's pipe
-#import neuralcoref
-#neuralcoref.add_to_pipe(nlp)
+import neuralcoref
+neuralcoref.add_to_pipe(nlp)
 
 
 class QuestionGenerator(object):
     def __init__(self, article):
         self.questions = []
 
+        self.entity_to_pronoun = {'PERSON': 'Who', 'NORP': 'Who', 'FAC': 'Where', 'ORG': 'Which organization',
+                             'GPE': 'Which entity', 'LOC': 'Where', 'PRODUCT': 'What', 'EVENT': 'What event',
+                             'WORK_OF_ART': 'What', 'LAW': 'What', 'LANGUAGE': 'What language', 'DATE': 'When',
+                             'TIME': 'When', 'PERCENT': 'What percent', 'MONEY': 'How much', 'QUANTITY': 'How much',
+                            'ORDINAL':'When', 'CARDINAL': 'How many'}
+
         # Parse the document with spaCy
         doc = nlp(article)
-        #doc = nlp(doc._.coref_resolved)
+        doc = nlp(doc._.coref_resolved)
 
         # Extract semi-structured statements
         svos = textacy.extract.subject_verb_object_triples(doc)
@@ -49,6 +55,7 @@ class QuestionGenerator(object):
                 # the relative pronoun is guaranteed to be the left child
                 # right child is direct object
                 verb_phrase = doc[token.left_edge.i + 1 : token.right_edge.i + 1].text # https://spacy.io/usage/examples#subtrees
+                verb_phrase = ' '.join(verb_phrase.split())
                 interrogative_pronoun = token.left_edge.text
                 if token.left_edge.text == "which":
                     interrogative_pronoun = "What"
@@ -88,37 +95,72 @@ class QuestionGenerator(object):
                             
                             for statement in statements:
                                 entity, verb, fact = statement
-                                
+                                #fact = ' '.join(fact.text.split('\n'))
                                 self.questions.append(self.generate_open_question(entity, verb, fact, token_verb.lemma_))
-                                print(fact.text.strip())
+                                #print(1, entity, verb, fact.text.strip())
                                     
                                 self.closed_questions.append(self.generate_closed_question(entity, verb, fact, token_verb.lemma_))
 
     
     def generate_open_question(self, entity, verb, fact, lemma):
+        entity_txt = ' '.join(entity.text.split()).strip()
+        fact_txt = ' '.join(fact.text.split()).strip()
+        verb_txt = ' '.join(verb.text.split()).strip()
+        if (fact_txt[-1] == '.'):
+            fact_txt[:-1]
+
+        if entity.label_ in self.entity_to_pronoun:
+            w_word = self.entity_to_pronoun[entity.label_]
+        else:
+            w_word = "What"
         if (' ' in verb.text):
             verb = verb.text.split()
-            question = "What " + verb[0] + ' ' + entity.text + ' ' + verb[1] + '?'
+            question = w_word + verb[0] + ' ' + entity_txt + ' ' + verb[1] + '?'
         elif lemma == "be":
             # TODO: tense / agreement
-            question = "What is " + fact.text.strip() + '?'
+            #question = "What is " + fact.text.strip() + '?'
+            if verb.tag_ == "VBD":
+                question = w_word + "was " + fact_txt + '?'
+            else:
+                question = w_word + " is " + fact_txt + '?'
             # TODO: if entity is a named entity (who) / time (when) / location (where) - what/why/who/when
         else: # X verbs Y
-            question = "What does " + entity.text + ' ' + verb.text + '?'
+            #question = "What does " + entity.text + ' ' + verb.text + '?'
+            if verb.tag_ == "VBD":
+                question = w_word + " did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            elif verb.tag_ == "VBZ":
+                question = w_word + " does " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            elif verb.tag_ == "VBP":
+                question = w_word + " do " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            else:
+                question = w_word + " did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+
 
         # Capitalize first letter of string
-        print(question)
+        #print(question)
         return question.capitalize()
 
     def generate_closed_question(self, entity, verb, fact, lemma):
-        if (' ' in verb.text): # auxiliary verbs
-            verb = verb.text.split()
-            question = verb[0] + ' ' + entity.text + ' ' + verb[1] + ' ' + fact.text.strip() + '?'
+        entity_txt = ' '.join(entity.text.split()).strip()
+        fact_txt = ' '.join(fact.text.split()).strip()
+        verb_txt = ' '.join(verb.text.split()).strip()
+        if (fact_txt[-1] == '.'):
+            fact_txt[:-1]
+        if (' ' in verb_txt): # auxiliary verbs
+            verb_txt = verb_txt.split()
+            question = verb_txt[0] + ' ' + entity_txt + ' ' + verb_txt[1] + ' ' + fact_txt + '?'
         elif lemma == "be":
-            question = verb.text + ' ' + entity.text + ' ' + fact.text.strip() + '?'
+            question = verb_txt + ' ' + entity_txt + ' ' + fact_txt + '?'
         else: # X verbs Y
             # TODO - tense matching, verb agreement
-            question = "Does " + entity.text + ' ' + verb.text + ' ' + fact.text.strip() + '?'
+            if verb.tag_ == "VBD":
+                question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            elif verb.tag_ == "VBZ":
+                question = "Does " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            elif verb.tag_ == "VBP":
+                question = "Do " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            else:
+                question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
 
         # Capitalize first letter of string
         question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)

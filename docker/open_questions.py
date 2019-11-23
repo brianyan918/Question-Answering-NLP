@@ -82,6 +82,8 @@ class QuestionGenerator(object):
                 for token_subj in token_verb.lefts:
                     if token_subj.dep_ == 'nsubj':
                         if token_verb.lemma_ not in self.treated_verbs:
+                            # TODO - don't rely on statements?? this will miss many sentences and is unnecessary work
+                            # X verbs Y (nsubj ROOT rest -> What/why/who/when does/do/did lemma(ROOT) rest)
                             self.treated_verbs.append(token_verb.lemma_)
                             statements = textacy.extract.semistructured_statements(doc, token_subj.text, cue=token_verb.lemma_,
                                                                ignore_entity_case=True)
@@ -90,25 +92,38 @@ class QuestionGenerator(object):
                                 entity, verb, fact = statement
                                 
                                 self.questions.append(self.generate_open_question(entity, verb, fact, token_verb.lemma_))
-                                print(fact.text.strip())
+                                # print(fact.text.strip())
                                     
                                 self.closed_questions.append(self.generate_closed_question(entity, verb, fact, token_verb.lemma_))
 
     
     def generate_open_question(self, entity, verb, fact, lemma):
-        if (' ' in verb.text):
+        # TODO - if NOT a named entity, decapitalize entity
+
+        if (' ' in verb.text): # auxiliary verbs
             verb = verb.text.split()
             question = "What " + verb[0] + ' ' + entity.text + ' ' + verb[1] + '?'
-        elif lemma == "be":
-            # TODO: tense / agreement
-            question = "What is " + fact.text.strip() + '?'
+        elif lemma == "be": # What is Y?
+            # TODO: agreement
+            if "past" in spacy.explain(verb.tag_):
+                question = "What was " # TODO - what were
+            else: 
+                question = "What is " # TODO - what are
+            question += fact.text.strip() + '?'
             # TODO: if entity is a named entity (who) / time (when) / location (where) - what/why/who/when
         else: # X verbs Y
-            question = "What does " + entity.text + ' ' + verb.text + '?'
+            # TODO - agreement
+            if "past" in spacy.explain(verb.tag_):
+                question = "What did "
+            else:
+                question = "What does " # TODO - what do
+            question += entity.text + ' ' + lemma + '?'
+
+        # TODO - add the full subject to the entity
 
         # Capitalize first letter of string
-        print(question)
-        return question.capitalize()
+        question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
+        return question
 
     def generate_closed_question(self, entity, verb, fact, lemma):
         if (' ' in verb.text): # auxiliary verbs
@@ -117,11 +132,20 @@ class QuestionGenerator(object):
         elif lemma == "be":
             question = verb.text + ' ' + entity.text + ' ' + fact.text.strip() + '?'
         else: # X verbs Y
-            # TODO - tense matching, verb agreement
-            question = "Does " + entity.text + ' ' + verb.text + ' ' + fact.text.strip() + '?'
+            if "past" in spacy.explain(verb.tag_):
+                question = "Did "
+            else:
+                question = "Does "
+            # TODO - agreement
+            question += entity.text + ' ' + lemma + ' ' + fact.text.strip() + '?'
+            print(question)
 
         # Capitalize first letter of string
         question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
+        return question
+
+    def post_process(self, question):
+        # TODO: fix plural agreement between subject and verb
         return question
 
     def get_questions(self):

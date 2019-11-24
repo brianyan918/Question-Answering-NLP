@@ -1,6 +1,6 @@
 #!/usr/bin/env python3 -W ignore::DeprecationWarning
 import sys
-from docker.open_questions import QuestionGenerator
+from open_questions import QuestionGenerator
 import random
 
 if __name__ == '__main__':
@@ -14,14 +14,15 @@ if __name__ == '__main__':
     with open(article_txt, 'r', encoding='utf8') as f:
         article_txt = f.read()
 
-    questions_generated = QuestionGenerator(article_txt).questions_only()
+    questions_generated = QuestionGenerator(article_txt).get_questions()
     for i in range(len(questions_generated)):
-        print(questions_generated[i])
+        print(2, questions_generated[i])
+        pass
 
     # TODO: rank the questions before printing
 
     if len(questions_generated) < num_questions:
         for i in range(num_questions - len(questions_generated)):
-            print(random.choice(questions_generated))
+            print(3, random.choice(questions_generated))
 
 # TODO: rename file to ask

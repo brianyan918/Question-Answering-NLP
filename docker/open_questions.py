@@ -162,7 +162,7 @@ class QuestionGenerator(object):
             #elif verb_txt.split()[0] == "have":
                 #verb_txt = "has" + ' '.join(verb_txt.split()[1:])
             verb_txt = verb_txt.replace("have ", "has ")
-            question = w_word + ' ' + verb_txt + ' ' + fact_txt
+            question = w_word + ' ' + verb_txt + ' ' + fact_txt+'?'
 
         # Capitalize first letter of string
         #print(question)
@@ -231,7 +231,7 @@ class QuestionGenerator(object):
                 scores[question] = score
 
         # sort by scores
-        return [key for key, value in sorted(scores.items(), key=lambda pair: pair[1], reverse=True)]
+        return [(key, value) for key, value in sorted(scores.items(), key=lambda pair: pair[1], reverse=True)]
 
     def get_questions(self):
         questions = self.questions + self.closed_questions

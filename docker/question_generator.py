@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     questions_generated = QuestionGenerator(article_txt).get_questions()
     for i in range(len(questions_generated)):
-        print(2, questions_generated[i])
+        print(questions_generated[i][1], questions_generated[i][0])
         pass
 
     # TODO: rank the questions before printing

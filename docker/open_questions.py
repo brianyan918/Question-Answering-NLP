@@ -111,10 +111,26 @@ class QuestionGenerator(object):
                             for statement in statements:
                                 entity, verb, fact = statement
                                 q = self.generate_open_question(entity, verb, fact, token_verb.lemma_)
-                                if q:
-                                    self.questions.append(q)
-                                self.closed_questions.append(self.generate_closed_question(entity, verb, fact, token_verb.lemma_))
+                                if q and q not in self.questions:
+                                    self.questions.append(q.strip())
+                                q = self.direct_object_question(entity, verb, fact, token_verb.lemma_)
+                                if q and q not in self.questions:
+                                    self.questions.append(q.strip())
+                                q = self.generate_closed_question(entity, verb, fact, token_verb.lemma_)
+                                if q and q not in self.closed_questions:
+                                    self.closed_questions.append(q.strip())
 
+    def direct_object_question(self, entity, verb, fact, lemma):
+        for token_dobj in fact:
+            if token_dobj.dep_ == "dobj":
+                if token_dobj.ent_type_ in self.entity_to_pronoun:
+                    w_word = self.entity_to_pronoun[token_dobj.ent_type_]
+                elif token_dobj.text in self.ner:
+                    w_word = self.entity_to_pronoun[self.ner[token_dobj.text]]
+                else:
+                    return
+                question = w_word + " " + verb + "?"
+                return question
     
     def generate_open_question(self, entity, verb, fact, lemma):
         if entity.text not in self.ner and entity.text != "I":
@@ -162,7 +178,7 @@ class QuestionGenerator(object):
             #elif verb_txt.split()[0] == "have":
                 #verb_txt = "has" + ' '.join(verb_txt.split()[1:])
             verb_txt = verb_txt.replace("have ", "has ")
-            question = w_word + ' ' + verb_txt + ' ' + fact_txt
+            question = w_word + ' ' + verb_txt + ' ' + fact_txt + "?"
 
         # Capitalize first letter of string
         #print(question)
@@ -184,7 +200,6 @@ class QuestionGenerator(object):
         elif lemma == "be":
             question = verb_txt + ' ' + entity_txt + ' ' + fact_txt + '?'
         else: # X verbs Y
-            # TODO - tense matching, verb agreement
             if verb.tag_ == "VBD":
                 question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
             elif verb.tag_ == "VBZ":
@@ -234,7 +249,7 @@ class QuestionGenerator(object):
         return [key for key, value in sorted(scores.items(), key=lambda pair: pair[1], reverse=True)]
 
     def get_questions(self):
-        questions = self.questions + self.closed_questions
+        questions = list(set(self.questions + self.closed_questions))
         # postprocess the questions
         questions = self.rank_questions(questions)
         return questions

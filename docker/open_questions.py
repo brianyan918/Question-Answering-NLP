@@ -3,6 +3,7 @@
 import spacy
 import textacy.extract
 import re
+import random
 
 # Load the large English NLP model
 nlp = spacy.load('en_core_web_sm')
@@ -129,7 +130,7 @@ class QuestionGenerator(object):
                     w_word = self.entity_to_pronoun[self.ner[token_dobj.text]]
                 else:
                     return
-                question = w_word + " " + verb + "?"
+                question = w_word + " " + verb.text + "?"
                 return question
     
     def generate_open_question(self, entity, verb, fact, lemma):
@@ -178,18 +179,18 @@ class QuestionGenerator(object):
             #elif verb_txt.split()[0] == "have":
                 #verb_txt = "has" + ' '.join(verb_txt.split()[1:])
             verb_txt = verb_txt.replace("have ", "has ")
-<<<<<<< HEAD
-            question = w_word + ' ' + verb_txt + ' ' + fact_txt+'?'
-=======
             question = w_word + ' ' + verb_txt + ' ' + fact_txt + "?"
->>>>>>> 5acfb8b742d2d264a540a9ccb3680de665e5613e
 
         # Capitalize first letter of string
         #print(question)
         return question
 
     def generate_closed_question(self, entity, verb, fact, lemma):
-        if entity.text not in self.ner and entity.text != "I":
+        if entity.text in self.ner:
+            possible_entities = [key for key in self.ner if self.ner[key]==self.ner[entity.text]]
+            # print(possible_entities, entity.text)
+            entity_txt = possible_entities[random.randint(0, len(possible_entities)-1)]
+        elif entity.text not in self.ner and entity.text != "I":
             entity_txt = entity.text.lower()
             entity_txt = ' '.join(entity_txt.split()).strip()
         else:

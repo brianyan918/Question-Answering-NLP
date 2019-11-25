@@ -15,15 +15,18 @@ if __name__ == '__main__':
         article_txt = f.read()
 
     questions_generated = QuestionGenerator(article_txt).get_questions()
+    
+    # Comment this final submission
     for i in range(len(questions_generated)):
-<<<<<<< HEAD
-        print(questions_generated[i][1], questions_generated[i][0])
-        pass
-=======
         print(questions_generated[i])
->>>>>>> 5acfb8b742d2d264a540a9ccb3680de665e5613e
+    # End comment
 
-    # TODO: rank the questions before printing
+    for  i in range(num_questions):
+        if (num_questions > len(questions_generated)):
+            print("No more questions, sorry ...")
+            break
+        print(questions_generated[i][0])
+    
 
     """if len(questions_generated) < num_questions:
         for i in range(num_questions - len(questions_generated)):

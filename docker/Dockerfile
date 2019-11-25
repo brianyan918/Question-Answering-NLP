@@ -13,12 +13,23 @@ RUN pip3 install spacy==2.1.0 && \
     pip3 install textacy==0.8.0 && \
     python3 -m spacy download en_core_web_sm
 
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y git
+
+RUN git clone https://github.com/huggingface/neuralcoref.git &&\
+    cd neuralcoref &&\
+    pip3 install -r requirements.txt &&\
+    pip3 install -e . &&\
+    cd ..
+
 # Add the files
 RUN mkdir /QA
 ADD ask /QA
 ADD answer /QA
 ADD open_questions.py /QA
 ADD answer_generator.py /QA
+ADD setup.py /QA
 
 RUN mkdir /host && \
     cd host && \
@@ -39,3 +50,5 @@ CMD ["chmod 777 test_questions.txt"]
 # Set working dir as /QA
 WORKDIR /QA
 ENTRYPOINT ["/bin/bash" , "-c"]
+
+RUN python3 setup.py

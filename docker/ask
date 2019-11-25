@@ -14,12 +14,10 @@ if __name__ == '__main__':
     with open(article_file, 'r') as f:
         article_txt = f.read()
 
-    # TODO: rank the questions
-    qg = QuestionGenerator(article_txt)
-    questions = qg.questions_only() + qg.closed_questions # open & closed qs
+    questions_generated = QuestionGenerator(article_txt).get_questions()
+    for i in range(min(len(questions_generated), num_questions)):
+        print(questions_generated[i])
 
-
-    #print(num_questions, questions)
-    #random.shuffle(questions)
-    for i in range(num_questions):
-        print(questions[i])
+    if len(questions_generated) < num_questions:
+        for i in range(num_questions - len(questions_generated)):
+            print(random.choice(questions_generated))

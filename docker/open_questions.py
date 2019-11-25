@@ -202,7 +202,39 @@ class QuestionGenerator(object):
         # TODO: fix plural agreement between subject and verb
         return question
 
+    def rank_questions(self, questions):
+        scores = {}
+        # assign a score
+        for question in questions:
+            if question not in scores:
+                # conciseness
+                score = 0
+                num_words = len(question.split())
+                if num_words >= 8:
+                    score += 10
+                if num_words < 20:
+                    score += 10
+
+                # missing the subject
+                question = nlp(question)
+
+                subject_missing = True
+                for token in question:
+                    if token.dep_ == "nsubj":
+                        subject_missing = False
+                        # penalize if subject is "this" / "it" / any pronoun
+                        if token.tag_ == "PRON":
+                            score -= 100
+                if subject_missing:
+                    score -= 1000
+        
+                scores[question] = score
+
+        # sort by scores
+        return [key for key, value in sorted(scores.items(), key=lambda pair: pair[1], reverse=True)]
+
     def get_questions(self):
         questions = self.questions + self.closed_questions
         # postprocess the questions
+        questions = self.rank_questions(questions)
         return questions

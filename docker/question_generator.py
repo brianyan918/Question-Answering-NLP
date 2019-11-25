@@ -16,13 +16,17 @@ if __name__ == '__main__':
 
     questions_generated = QuestionGenerator(article_txt).get_questions()
     for i in range(len(questions_generated)):
+<<<<<<< HEAD
         print(questions_generated[i][1], questions_generated[i][0])
         pass
+=======
+        print(questions_generated[i])
+>>>>>>> 5acfb8b742d2d264a540a9ccb3680de665e5613e
 
     # TODO: rank the questions before printing
 
-    if len(questions_generated) < num_questions:
+    """if len(questions_generated) < num_questions:
         for i in range(num_questions - len(questions_generated)):
-            print(3, random.choice(questions_generated))
+            print(3, random.choice(questions_generated))"""
 
 # TODO: rename file to ask

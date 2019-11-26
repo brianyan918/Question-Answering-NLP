@@ -205,17 +205,24 @@ class QuestionGenerator(object):
         elif lemma == "be":
             question = verb_txt + ' ' + entity_txt + ' ' + fact_txt + '?'
         else: # X verbs Y
-            if verb.tag_ == "VBD":
-                question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
-            elif verb.tag_ == "VBZ":
-                question = "Does " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
-            elif verb.tag_ == "VBP":
-                question = "Do " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+            # Use "DID" or "Is it true/false that"
+            rand = random.uniform(0, 1)
+            if rand < .6:
+                if verb.tag_ == "VBD":
+                    question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+                elif verb.tag_ == "VBZ":
+                    question = "Does " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+                elif verb.tag_ == "VBP":
+                    question = "Do " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+                else:
+                    question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
             else:
-                question = "Did " + entity_txt + ' ' + lemma + " " + fact_txt + '?'
+                begin = "Is it true that "
+                question = begin + entity_txt + ' ' + verb_txt + ' ' + fact_txt + '?'
 
         # Capitalize first letter of string
         question = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), question, 1)
+        question = ' '.join(question.split())
         return question
 
     def post_process(self, question):

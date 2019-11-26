@@ -16,8 +16,8 @@ if __name__ == '__main__':
 
     questions_generated = QuestionGenerator(article_txt).get_questions()
     for i in range(min(len(questions_generated), num_questions)):
-        print(questions_generated[i])
+        print(questions_generated[i][0])
 
     if len(questions_generated) < num_questions:
         for i in range(num_questions - len(questions_generated)):
-            print(random.choice(questions_generated))
+            print(random.choice(questions_generated)[0])

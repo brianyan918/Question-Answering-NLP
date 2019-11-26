@@ -87,8 +87,8 @@ class AnswerGenerator():
             # closed (yes / no) questions
             if doc_q[0].lemma_ in self.closed_question_lemmas:
                 # check if question is contained in the proposed answer
-                print(doc_q)
-                print(doc_a)
+                #print(doc_q)
+                #print(doc_a)
                 for word in doc_q[1:]: # exclude the question phrase
                     if word.text == "?" or re.match(r'\s', word.text) or word.text == '\'s':
                         continue
@@ -149,4 +149,4 @@ class AnswerGenerator():
         # print(self.answers[question])
 
         #return sentences[np.argmax(sentence_difference)]
-        return self.answer
+        return ' '.join(self.answer.split())

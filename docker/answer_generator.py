@@ -91,10 +91,28 @@ class AnswerGenerator():
                     if word.text == "?" or re.match(r'\s', word.text):
                         continue
                     if word.text.lower() not in self.answer.lower():
-                        self.answer = 'No'
-                        return
+                        # Has the verb changed
+                        if (word.pos_ == 'VERB'):
+                            lemma_in_answer = False
+                            for word_a in doc_a_original:
+                                if word.lemma_ == word_a.lemma_:
+                                    lemma_in_answer = True
+                            if not lemma_in_answer:
+                                self.answer = 'No'
+                                return
+                        
+                        # Have the other important words of the sentence been changed
+                        elif (word.pos_ not in ['ADP', 'AUX', 'DET', 'SCONJ', 'PUNCT']):
+                            word_in_answer = False
+                            for word_a in doc_a:
+                                if word.text == word_a.text and word.dep_ == word_a.dep_:
+                                    word_in_answer = True
+
+                            if not word_in_answer:
+                                self.answer = 'No'
+                                return
                 
-                self.answer = 'Yes.'
+                self.answer = 'Yes'
 
 
     def answer_generator(self, question):

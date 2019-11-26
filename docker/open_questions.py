@@ -18,9 +18,9 @@ class QuestionGenerator(object):
         self.questions = []
 
         self.entity_to_pronoun = {'PERSON': 'Who', 'NORP': 'Who', 'FAC': 'Where', 'ORG': 'Which organization',
-                             'GPE': 'Where', 'LOC': 'Where', 'PRODUCT': 'What', 'EVENT': 'What event',
-                             'WORK_OF_ART': 'What', 'LAW': 'What', 'LANGUAGE': 'What language', 'DATE': 'When',
-                             'TIME': 'When', 'PERCENT': 'What percent', 'MONEY': 'How much', 'QUANTITY': 'How much',
+                            'GPE': 'Where', 'LOC': 'Where', 'PRODUCT': 'What', 'EVENT': 'What event',
+                            'WORK_OF_ART': 'What', 'LAW': 'What', 'LANGUAGE': 'What language', 'DATE': 'When',
+                            'TIME': 'When', 'PERCENT': 'What percent', 'MONEY': 'How much', 'QUANTITY': 'How much',
                             'ORDINAL':'When', 'CARDINAL': 'How many'}
 
         # Parse the document with spaCy

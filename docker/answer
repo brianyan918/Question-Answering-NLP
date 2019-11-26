@@ -16,9 +16,9 @@ if __name__ == "__main__":
 
     with open(question_file, 'r')  as f:
         count = 0
+        generator = AnswerGenerator(article_file)
         for line in f:
             count += 1
-            generator = AnswerGenerator(article_file)
             # TODO: call the answering module
             answer = generator.answer_generator(line)
 

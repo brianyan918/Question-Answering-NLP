@@ -9,19 +9,69 @@ nlp = spacy.load('en_core_web_sm')
 nlp.add_pipe(nlp.create_pipe('sentencizer'))
 
 # Add neural coref to SpaCy's pipe
-#import neuralcoref
-#neuralcoref.add_to_pipe(nlp)
+import neuralcoref
+neuralcoref.add_to_pipe(nlp)
 
 class AnswerGenerator():
     def __init__(self, text):
-        self.answers = {}
+        self.answer = ''
         self.text = text
+        self.doc_original = nlp(self.text)
+        self.doc = nlp(self.doc_original._.coref_resolved)
 
-    def add_answer(self, question, answer):
-        if question in self.answers:
-            self.answers[question].append(answer)
+        self.pronoun_to_entity = {'Who':{'PERSON', 'NORP'}, 
+                    'Where':{'FAC', 'ORG', 'GPE', 'LOC'},
+                    'How many':{'CARDINAL'},
+                    'How much':{'QUANTITY', 'PERCENT', 'MONEY'},
+                    'What percent':{'PERCENT'},
+                    'When':{'TIME', 'ORDINAL', 'EVENT'},
+                    'What':{'PRODUCT', 'WORK_OF_ART', 'LAW', 'LANGUAGE'}}
+
+    def add_answer(self, question, doc_a, doc_a_original):
+        # Remove named entity repetitions cause by Neural Coref.
+        potential_NE_answers = set()
+        #doc_a = nlp(answer)
+        doc_q = nlp(question)
+        doc_q_set = [ner.text for ner in doc_q.ents]
+        for ner in doc_a.ents:
+            # If w_word of the question is a real w_word and ner is not in the question
+            if question.split()[0] in self.pronoun_to_entity and ner.text.strip() not in doc_q_set:
+                if ner.label_ in self.pronoun_to_entity[question.split()[0]]:
+                    potential_NE_answers.add(ner)
+        if len(potential_NE_answers) == 1:
+            self.answer = potential_NE_answers.pop().text
         else:
-            self.answers[question] = [answer]
+            # Remove named entity repetitions cause by Neural Coref.
+            found = False
+            start_token = ''
+            answer = []
+            for token in doc_a:
+                if token._.in_coref and not found:
+                    found = True
+                if not token._.in_coref and found:
+                    start_token = token.text
+                    break
+
+                answer.append(token.text)
+
+            original_found = False
+            for token in doc_a_original:
+                if token.text == start_token and not original_found:
+                    original_found = True
+                if original_found:
+                    answer.append(token.text)
+        # print(answer)
+
+            stripped_answer = ''
+            for word in answer:
+                if word not in [',', '.', '!', '?', "'s"]:
+                    stripped_answer+=' '+word
+                else:
+                    stripped_answer+=word
+
+
+            self.answer = ' '.join(stripped_answer.strip().split())
+
 
     def answer_generator(self, question):
         #generate set of words in current question
@@ -32,8 +82,7 @@ class AnswerGenerator():
                 question_set.add(word)
 
         #transform text to list of sentences
-        doc = nlp(self.text)
-        sentences = [sent.string.strip() for sent in doc.sents]
+        sentences = [' '.join((sent.string.strip()).split()) for sent in self.doc.sents]
         sentence_difference = []
 
         #check all the sentences for the similarity with the question set
@@ -46,8 +95,14 @@ class AnswerGenerator():
             sentence_difference.append(len(curr_sentence_set.intersection(question_set)))
 
         #add the sentence most similar to the question to the answer set.
-        self.add_answer(question, sentences[np.argmax(sentence_difference)])
+        token_sentences_original = [sent for sent in self.doc_original.sents]
+        token_sentences_corefered = [sent for sent in self.doc.sents]
+        sentence_position_in_text = np.argmax(sentence_difference)
+
+        self.add_answer(question, token_sentences_corefered[sentence_position_in_text],
+                                  token_sentences_original[sentence_position_in_text])
 
         # print(self.answers[question])
 
-        return sentences[np.argmax(sentence_difference)]
+        #return sentences[np.argmax(sentence_difference)]
+        return self.answer

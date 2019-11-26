@@ -87,10 +87,8 @@ class AnswerGenerator():
             # closed (yes / no) questions
             if doc_q[0].lemma_ in self.closed_question_lemmas:
                 # check if question is contained in the proposed answer
-
-                # lemmatize the whole answer
-                self.answer = [word.lemma_.lower() for word in nlp(self.answer)]
-
+                print(doc_q)
+                print(doc_a)
                 for word in doc_q[1:]: # exclude the question phrase
                     if word.text == "?" or re.match(r'\s', word.text) or word.text == '\'s':
                         continue

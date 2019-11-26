@@ -27,6 +27,8 @@ class AnswerGenerator():
                     'When':{'TIME', 'ORDINAL', 'EVENT'},
                     'What':{'PRODUCT', 'WORK_OF_ART', 'LAW', 'LANGUAGE'}}
 
+        self.closed_question_lemmas = {'be', 'has', 'do'}
+
     def add_answer(self, question, doc_a, doc_a_original):
         # Remove named entity repetitions cause by Neural Coref.
         potential_NE_answers = set()
@@ -71,6 +73,19 @@ class AnswerGenerator():
 
 
             self.answer = ' '.join(stripped_answer.strip().split())
+
+            # closed (yes / no) questions
+            if doc_q[0].lemma_ in self.closed_question_lemmas:
+                print(self.answer)
+                # check if question is contained in the proposed answer
+                for word in doc_q[1:]:
+                    if word.text == "?" or re.match(r'\s', word.text):
+                        continue
+                    if word.text.lower() not in self.answer.lower():
+                        self.answer = 'No'
+                        return
+                
+                self.answer = 'Yes.'
 
 
     def answer_generator(self, question):

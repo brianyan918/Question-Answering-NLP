@@ -3,6 +3,7 @@ import spacy
 import textacy.extract
 import re
 import numpy as np
+from functools import reduce
 
 # Load the large English NLP model
 nlp = spacy.load('en_core_web_sm')
@@ -21,11 +22,11 @@ class AnswerGenerator():
 
         self.pronoun_to_entity = {'Who':{'PERSON', 'NORP'}, 
                     'Where':{'FAC', 'ORG', 'GPE', 'LOC'},
-                    'How many':{'CARDINAL'},
+                    'How many':{'CARDINAL', 'DATE'},
                     'How much':{'QUANTITY', 'PERCENT', 'MONEY'},
                     'What percent':{'PERCENT'},
-                    'When':{'TIME', 'ORDINAL', 'EVENT'},
-                    'What':{'PRODUCT', 'WORK_OF_ART', 'LAW', 'LANGUAGE'}}
+                    'When':{'TIME', 'ORDINAL', 'EVENT', 'DATE'},
+                    'What':{'PRODUCT', 'WORK_OF_ART', 'LAW', 'LANGUAGE', 'NORP', 'ORG'}}
 
         self.closed_question_lemmas = {'be', 'has', 'do'}
 
@@ -35,13 +36,22 @@ class AnswerGenerator():
         #doc_a = nlp(answer)
         doc_q = nlp(question)
         doc_q_set = [ner.text for ner in doc_q.ents]
+
+        # wh word may not be the first word(s)
+        question_word = None
+        for wh_word in self.pronoun_to_entity.keys():
+            if wh_word.lower() in question.lower():
+                question_word = wh_word
+                
         for ner in doc_a.ents:
             # If w_word of the question is a real w_word and ner is not in the question
-            if question.split()[0] in self.pronoun_to_entity and ner.text.strip() not in doc_q_set:
-                if ner.label_ in self.pronoun_to_entity[question.split()[0]]:
+            if question_word and ner.text.strip() not in doc_q_set:
+                if ner.label_ in self.pronoun_to_entity[question_word]:
                     potential_NE_answers.add(ner)
         if len(potential_NE_answers) == 1:
             self.answer = potential_NE_answers.pop().text
+        # elif len(potential_NE_answers) > 1:
+        #     # rank the answers
         else:
             # Remove named entity repetitions cause by Neural Coref.
             found = False

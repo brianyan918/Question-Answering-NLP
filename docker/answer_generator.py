@@ -76,7 +76,6 @@ class AnswerGenerator():
 
             # closed (yes / no) questions
             if doc_q[0].lemma_ in self.closed_question_lemmas:
-                print(self.answer)
                 # check if question is contained in the proposed answer
                 for word in doc_q[1:]:
                     if word.text == "?" or re.match(r'\s', word.text):
